@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Groq Chatbot – Input width matches chat area</title>
+
+<!-- Font Awesome – paper‑plane icon -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- MARKDOWN‑IT + all useful plugins (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/markdown-it@13/dist/markdown-it.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-emoji@2/dist/markdown-it-emoji.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@3/dist/markdown-it-footnote.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-sub@1/dist/markdown-it-sub.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-sup@1/dist/markdown-it-sup.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-mark@3/dist/markdown-it-mark.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-container@3/dist/markdown-it-container.min.js"></script>
+
+<!-- Highlight.js – nice code‑block styling -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+  /* ---------- GLOBAL VARIABLES ---------- */
+  :root {
+    --primary:      #0066cc;            /* main brand colour */
+    --primary-dark:#0055aa;
+    --bg-page:      #f0f2f5;
+    --bg-chat:      #ffffff;
+    --bg-bot:       #e9ecef;
+    --bg-user:      var(--primary);
+    --radius:       20px;
+    --max-w:        720px;              /* <-- change this to resize everything */
+    --shadow:       0 4px 12px rgba(0,0,0,.07);
+    --font-sans:    "Google Sans", -apple-system, BlinkMacSystemFont,
+                    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* ---------- PAGE ---------- */
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-page);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* ---------- TITLE ---------- */
+  #chatTitle {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0 0 15px;
+    color: #222;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,.05);
+  }
+
+  /* ---------- CHAT CONTAINER ---------- */
+  #chat {
+    width: 100%;                 /* fill the parent width */
+    max-width: var(--max-w);      /* same max‑width as the input area */
+    height: 460px;
+    background: var(--bg-chat);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* ARIA role for screen‑readers – logs new messages */
+    role: log;
+  }
+
+  /* ---------- MESSAGE BUBBLES ---------- */
+  .message {
+    max-width: 80%;
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    line-height: 1.5;
+    font-size: 1rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    transition: background .15s ease;
+  }
+  .bot   { align-self: flex-start; background: var(--bg-bot); color:#111; }
+  .user  { align-self: flex-end;   background: var(--bg-user); color:#fff; }
+
+  /* ----- Markdown‑specific styling (inside .message) ----- */
+  .message h1,
+  .message h2,
+  .message h3,
+  .message h4,
+  .message h5,
+  .message h6 {
+    margin: .6em 0 .3em;
+    font-weight: 600;
+  }
+  .message h1 { font-size: 1.8rem; }
+  .message h2 { font-size: 1.6rem; }
+  .message h3 { font-size: 1.4rem; }
+
+  .message p { margin: .4em 0; }
+
+  .message ul,
+  .message ol {
+    margin: .6em 0 .6em 1.6em;
+    padding-left: 0;
+  }
+  .message li { margin: .3em 0; }
+
+  .message blockquote {
+    border-left: 4px solid #ccc;
+    padding-left: .8em;
+    margin: .8em 0;
+    color: #555;
+    font-style: italic;
+  }
+
+  .message hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 1em 0;
+  }
+
+  .message code {
+    background: #f4f4f4;
+    padding: .1em .3em;
+    border-radius: 4px;
+    font-family: "Courier New", monospace;
+    font-size: .95em;
+  }
+
+  .message pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: .9em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: "Courier New", monospace;
+    font-size: .94rem;
+  }
+
+  .message table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: .8em 0;
+    font-size: .95rem;
+  }
+  .message th,
+  .message td {
+    border: 1px solid #ddd;
+    padding: .5em;
+    text-align: left;
+  }
+  .message th { background: #f0f0f0; }
+
+  .message .footnotes {
+    font-size: .85rem;
+    margin-top: .6em;
+    border-top: 1px solid #eee;
+    padding-top: .4em;
+  }
+
+  .message .emoji {
+    vertical-align: middle;
+    width: 1.2em;
+    height: 1.2em;
+  }
+
+  /* ---------- INPUT AREA ---------- */
+  #input-area {
+    width: 100%;                 /* same as #chat */
+    max-width: var(--max-w);      /* obey the same max‑width */
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .input-wrapper {
+    position: relative;
+    width: 100%;                 /* fill the parent width */
+  }
+
+  #userInput {
+    width: 90%;                 /* fill the wrapper */
+    padding: 13px 55px 13px 20px;/* right padding leaves room for the button */
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 30px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  #userInput:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(0,102,204,.2);
+  }
+
+  #sendBtn {
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    transition: background .2s;
+  }
+
+  #sendBtn:hover {
+    background: var(--primary-dark);
+  }
+</style>
+</head>
+<body>
+
+<h2 id="chatTitle">Multiverse AI</h2>
+
+<div id="chat"></div>
+
+<div id="input-area">
+  <div class="input-wrapper">
+    <input type="text" id="userInput"
+           placeholder="Type your message…" autocomplete="off" autofocus>
+    <button id="sendBtn" aria-label="Send">
+      <i class="fas fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const GROQ_API_KEY = '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'; // ← replace with your key
+const MODEL = 'llama-3.3-70b-versatile';
+/* --------------------------- */
+
+/* ----- Initialise markdown‑it with plugins ----- */
+const md = window.markdownit({
+  html: false,
+  linkify: true,
+  typographer: true
+})
+  .use(window.markdownitEmoji)
+  .use(window.markdownitFootnote)
+  .use(window.markdownitSub)
+  .use(window.markdownitSup)
+  .use(window.markdownitMark)
+  .use(window.markdownitContainer, 'warning');
+
+/* ----- Conversation state ----- */
+const chatEl = document.getElementById('chat');
+const userInp = document.getElementById('userInput');
+
+const messages = [
+  { role: "system", content: "You are a helpful, concise and friendly assistant." }
+];
+
+/* ----- Add a message bubble ----- */
+function addMessage(text, who) {
+  const div = document.createElement('div');
+  div.className = `message ${who}`;
+
+  if (who === 'bot') {
+    div.innerHTML = md.render(text);   // markdown → HTML
+  } else {
+    div.textContent = text;            // plain user text
+  }
+
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+/* ----- Send a message to Groq ----- */
+async function sendMessage() {
+  const userText = userInp.value.trim();
+  if (!userText) return;
+
+  addMessage(userText, 'user');   // show instantly
+  userInp.value = '';
+
+  messages.push({ role: "user", content: userText });
+
+  if (!GROQ_API_KEY) {
+    addMessage("❗️ No Groq API key set – edit the script and add one.", 'bot');
+    return;
+  }
+
+  try {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages,
+        temperature: 0.7,
+        max_tokens: 800,
+        stream: false
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`API error ${resp.status}: ${err}`);
+    }
+
+    const data = await resp.json();
+    const reply = data.choices[0].message.content.trim();
+
+    addMessage(reply, 'bot');
+    messages.push({ role: "assistant", content: reply });
+  } catch (e) {
+    addMessage(`⚠️  Sorry — error: ${e.message}`, 'bot');
+  }
+}
+
+/* ----- Event listeners ----- */
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+userInp.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+</script>
+
+</body>
+</html>
