@@ -1,328 +1,766 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Multiverse AI – Jemini Input Box (no tone)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multiverse AI</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Font Awesome (icons) -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<!-- MARKDOWN‑IT (for rendering bot messages) -->
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@13/dist/markdown-it.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-emoji@2/dist/markdown-it-emoji.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@3/dist/markdown-it-footnote.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-sub@1/dist/markdown-it-sub.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-sup@1/dist/markdown-it-sup.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-mark@3/dist/markdown-it-mark.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-container@3/dist/markdown-it-container.min.js"></script>
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <style>
-  :root {
-    --bg-page: #ffffff;
-    --text-main: #1f1f1f;
-    --text-muted: #444746;
-    --font-sans: "Google Sans", "Inter", "Segoe UI", sans-serif;
-    --accent-blue: #1a73e8;
-    --user-bubble: #f0f4f9;
-  }
+/* -------------------------------------------------- */
+/*  GLOBAL VARIABLES – Multiverse colours & Jemini UI   */
+/* -------------------------------------------------- */
+:root{
+    /* Multiverse theme */
+    --primary:#9162B3;
+    --primary-dark:#7a4f99;
+    --bg-page:#f4f7f6;
+    --bg-chat:#fff;
+    --bg-bot:#f0f2f5;
+    --bg-user:linear-gradient(135deg,#9162B3,#7a4f99);
+    --radius:20px;
+    --max-w:900px;
+    --shadow:0 8px 24px rgba(0,0,0,0.08);
+    --font-sans:"Google Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 
-  body {
-    font-family: var(--font-sans);
-    background: var(--bg-page);
-    color: var(--text-main);
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-  }
+    /* Jemini UI colours (kept unchanged) */
+    --bg-main:#ffffff;
+    --bg-sidebar:#f0f4f9;
+    --sidebar-hover:#e1e5ea;
+    --text-primary:#1f1f1f;
+    --text-secondary:#444746;
+    --input-pill-bg:#f0f4f9;
+    --blue-accent:#0b57d0;
+    --border-color:#dee2e6;
+}
 
-  /* --- HEADER --- */
-  header {
-    width: 100%;
-    padding: 12px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-sizing: border-box;
-  }
+/* -------------------------------------------------- */
+/*  PAGE LAYOUT                                      */
+/* -------------------------------------------------- */
+body{
+    font-family:var(--font-sans);
+    background:var(--bg-page);
+    margin:0;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    box-sizing:border-box;
+}
+#chatTitle{
+    font-size:2rem;
+    font-weight:700;
+    margin:0 0 20px;
+    color:#2A0645;
+    text-align:center;
+}
+.chat-app{
+    width:100%;
+    max-width:var(--max-w);
+    height:75vh;
+    min-height:500px;
+    background:var(--bg-chat);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;          /* for pill‑label positioning */
+}
+#chat{
+    flex-grow:1;
+    padding:20px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+#chat::-webkit-scrollbar{width:6px;}
+#chat::-webkit-scrollbar-thumb{background:#ddd;border-radius:10px;}
 
-  .header-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+/* -------------------------------------------------- */
+/*  MESSAGE BUBBLES                                  */
+/* -------------------------------------------------- */
+.message{
+    max-width:80%;
+    padding:12px 18px;
+    border-radius:var(--radius);
+    line-height:1.5;
+    font-size:1rem;
+    word-break:break-word;
+}
+.bot{
+    align-self:flex-start;
+    background:var(--bg-bot);
+    color:#111;
+    border-bottom-left-radius:4px;
+}
+.user{
+    align-self:flex-end;
+    background:var(--bg-user);
+    color:#fff;
+    border-bottom-right-radius:4px;
+}
+.bot-typing{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-style:italic;
+    color:#666;
+}
+.bot-typing i{color:var(--primary);}
 
-  .header-title { font-weight: 500; font-size: 1.1rem; color: #5f6368; }
-  .header-subtitle { font-size: 0.9rem; color: var(--text-muted); }
-  .header-icon { color: #5f6368; font-size: 1.2rem; cursor: pointer; }
+/* -------------------------------------------------- */
+/*  INPUT AREA – EXACT COPY FROM JEMINI              */
+/* -------------------------------------------------- */
+.input-wrapper{
+    position:absolute;
+    bottom:50px;
+    left:0; right:0;
+    transform:translateY(0);
+    padding:0 15% 30px 15%;
+    background:transparent;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    transition:all 1.5s ease-out;
+    z-index:10;
+}
+.input-wrapper.slide-down{
+    bottom:0;
+    background:none;
+}
+.input-pill{
+    background:var(--input-pill-bg);
+    border-radius:32px;
+    padding:8px 24px;
+    display:flex;
+    flex-direction:column;
+    border:1px solid var(--border-color);
+    width:90%;
+    position:relative;
+}
+#chatIn{
+    background:transparent;
+    border:none;
+    outline:none;
+    font-size:16px;
+    width:100%;
+    color:var(--text-primary);
+    font-family:inherit;
+    resize:none;
+    min-height:20px;
+    margin:8px 0;
+}
+.pill-bottom-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:8px;
+}
+.left-controls{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    /* Keep a tiny minimum width so the flex container does not collapse
+       when the Tools button is removed. */
+    min-width:40px;
+}
+.char-counter{
+    font-size:11px;
+    color:var(--text-secondary);
+    opacity:.7;
+    margin-right:10px;
+}
+.icon-btn{
+    color:var(--text-secondary);
+    cursor:pointer;
+    font-size:18px;
+    padding:8px;
+    border-radius:50%;
+}
+.icon-btn:hover{background:var(--sidebar-hover);}
+.fas-fa-cog{padding-left:10px !important;}
 
-  /* --- CHAT AREA --- */
-  #chat {
-    width: 100%;
-    max-width: 820px;
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 20px 40px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    box-sizing: border-box;
-  }
+/* -------------------------------------------------- */
+/*  DROPDOWNS (PLUS)                                 */
+/* -------------------------------------------------- */
+.dropdown-container{
+    position:relative;
+    display:inline-block;
+}
+.dropdown-menu{
+    position:absolute;
+    bottom:50px;
+    left:0;
+    background:var(--bg-sidebar);
+    border:1px solid var(--border-color);
+    border-radius:12px;
+    padding:8px 0;
+    min-width:200px;
+    display:none;
+    z-index:1000;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+.dropdown-item{
+    padding:10px 16px;
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:var(--text-primary);
+}
+.dropdown-item:hover{background:var(--sidebar-hover);}
 
-  /* --- MESSAGE WRAPPERS --- */
-  .message-wrapper {
-    display: flex;
-    gap: 16px;
-    width: 100%;
-    animation: fadeIn 0.3s ease;
-  }
+/* -------------------------------------------------- */
+/*  MODEL SELECTOR (JEMINI)                           */
+/* -------------------------------------------------- */
+.model-selector{
+    position:relative;
+    display:inline-block;
+}
+#model-select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    background:var(--input-pill-bg);
+    border:1px solid var(--border-color);
+    border-radius:20px;
+    padding:8px 12px;
+    font-family:"Google Sans","Roboto",sans-serif;
+    font-size:13px;
+    color:var(--text-primary);
+    cursor:pointer;
+    padding-right:36px;
+    background-image:url("data:image/svg+xml;utf8,<svg fill='gray' height='12' viewBox='0 0 24 24' width='12' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 8px center;
+    background-size:12px;
+    transition:border-color .2s,box-shadow .2s;
+}
+#model-select:hover{
+    border-color:var(--blue-accent);
+    box-shadow:0 0 0 2px rgba(11,87,208,.2);
+}
+#model-select:focus{outline:none;}
+.model-label{
+    font-size:13px;
+    color:var(--text-secondary);
+    cursor:pointer;
+    padding:8px 12px;
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:all .2s;
+}
+.model-label:hover{background:var(--sidebar-hover);}
+.model-dropdown{
+    position:absolute;
+    bottom:50px;
+    right:0;
+    background:var(--bg-sidebar);
+    border:1px solid var(--border-color);
+    border-radius:12px;
+    padding:8px 0;
+    min-width:220px;
+    display:none;
+    z-index:1000;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+.model-option{
+    padding:12px 16px;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--text-primary);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    transition:background .2s;
+}
+.model-option:hover{background:var(--sidebar-hover);}
+.model-option.active{color:var(--blue-accent);}
+.model-option-title{font-weight:500;}
+.model-option-desc{
+    font-size:11px;
+    color:var(--text-secondary);
+    display:block;
+    margin-top:2px;
+}
+.checkmark{
+    font-size:16px;
+    color:var(--blue-accent);
+    display:none;
+}
+.checkmark.show{display:inline;}
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+/* -------------------------------------------------- */
+/*  SEND BUTTON                                       */
+/* -------------------------------------------------- */
+.send-btn{
+    color:var(--blue-accent);
+    opacity:.3;
+    pointer-events:none;
+    cursor:pointer;
+    font-size:20px;
+}
+.send-btn.ready{
+    opacity:1;
+    pointer-events:auto;
+}
 
-  .icon-col {
-    width: 24px;
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-  }
+/* -------------------------------------------------- */
+/*  DISCLAIMER                                         */
+/* -------------------------------------------------- */
+.disclaimer{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-secondary);
+    margin-top:14px;
+    width:100%;
+    display:block;
+}
 
-  .sparkle-icon { color: #4285f4; font-size: 1.4rem; margin-top: 2px; }
+/* -------------------------------------------------- */
+/*  MARKDOWN‑IT CODE HIGHLIGHT                        */
+/* -------------------------------------------------- */
+.message pre{
+    background:#1e1e1e;
+    color:#f8f8f2;
+    padding:1em;
+    border-radius:8px;
+    overflow-x:auto;
+    font-family:monospace;
+    font-size:.9rem;
+    margin:10px 0;
+}
 
-  .content-col {
-    flex: 1;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
+/* -------------------------------------------------- */
+/*  PILL‑LABEL STYLES (JEMINI‑LIKE)                   */
+/* -------------------------------------------------- */
+#pillLabelsContainer{
+    position:absolute;
+    top:8px;
+    left:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    z-index:20;
+}
+.pill-label{
+    background:#e0e0e0;
+    color:#333;
+    border-radius:12px;
+    padding:4px 10px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+}
+.pill-label span{
+    margin-left:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
 
-  /* --- USER MESSAGE --- */
-  .user-wrapper { justify-content: flex-end; }
-  .user-content {
-    background: var(--user-bubble);
-    padding: 12px 20px;
-    border-radius: 24px;
-    max-width: 75%;
-    font-size: 1rem;
-    line-height: 1.5;
-  }
-
-  /* --- BOT MESSAGE --- */
-  .bot-content {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: var(--text-main);
-  }
-
-  /* Bot Markdown Styling */
-  .bot-content p { margin: 0 0 16px 0; }
-  .bot-content h3 { font-size: 1.1rem; font-weight: 500; margin: 0 0 12px 0; }
-  .bot-content ul { padding-left: 20px; margin: 0 0 16px 0; }
-  .bot-content li { margin-bottom: 12px; }
-  .bot-content strong { font-weight: 600; }
-  
-  /* The Horizontal Rule */
-  .bot-content hr {
-    border: 0;
-    border-top: 1px solid #e3e3e3;
-    margin: 24px 0 16px 0;
-  }
-
-  /* --- ACTION ICONS (Like, Copy, etc) --- */
-  .action-bar {
-    display: flex;
-    gap: 16px;
-    margin-top: 8px;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-  }
-  .action-bar i { cursor: pointer; transition: color 0.2s; }
-  .action-bar i:hover { color: var(--accent-blue); }
-
-  /* --- THINKING ANIMATION --- */
-  .typing { display: flex; gap: 4px; padding: 10px 0; }
-  .typing span { width: 6px; height: 6px; background: #9aa0a6; border-radius: 50%; animation: bounce 1.4s infinite; }
-  .typing span:nth-child(2) { animation-delay: 0.2s; }
-  .typing span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-  /* --- INPUT AREA --- */
-  .input-section {
-    width: 100%;
-    max-width: 820px;
-    padding: 10px 20px 20px 20px;
-    box-sizing: border-box;
-    background: var(--bg-page);
-  }
-
-  .input-pill {
-    background: var(--user-bubble);
-    border-radius: 32px;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .input-pill .fa-plus { color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
-
-  #userInput {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 10px 0;
-    font-size: 1rem;
-    outline: none;
-    font-family: var(--font-sans);
-  }
-
-  #sendBtn {
-    background: transparent;
-    border: none;
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .disclaimer {
-    text-align: center;
-    font-size: 0.75rem;
-    color: #70757a;
-    margin-top: 12px;
-  }
+/* -------------------------------------------------- */
+/*  SOME MODALS FROM JEMINI (kept hidden, not used)   */
+/* -------------------------------------------------- */
+.modal{
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.8);
+    z-index:2000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+}
+.modal-content{
+    background:var(--bg-sidebar);
+    padding:40px;
+    border-radius:20px;
+    text-align:center;
+    width:450px;
+    border:1px solid var(--border-color);
+    color:var(--text-primary);
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+}
 </style>
 </head>
+
 <body>
 
-<header>
-  <i class="fas fa-bars header-icon"></i>
-  <div class="header-center">
-    <div class="header-title">Multiverse AI</div>
-  </div>
-  <i class="fas fa-ellipsis-v header-icon"></i>
-</header>
+<h2 id="chatTitle">Multiverse AI</h2>
 
-<div id="chat"></div>
+<div class="chat-app">
+    <!-- ---------- CHAT DISPLAY ---------- -->
+    <div id="chat"></div>
 
-<div class="input-section">
-  <div class="input-pill">
-    <i class="fas fa-plus"></i>
-    <input type="text" id="userInput" placeholder="Ask me anything..." autocomplete="off" autofocus>
-    <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
-  </div>
-  <div class="disclaimer">Multiverse AI isn't human. It can make mistakes, so double-check it.</div>
+    <!-- ---------- INPUT AREA (JEMINI copy) ---------- -->
+    <div class="input-wrapper">
+        <div class="input-pill">
+            <!-- Pill‑label container (top‑left of the input) -->
+            <div id="pillLabelsContainer"></div>
+
+            <textarea id="chatIn"
+                      placeholder="Ask Multiverse"
+                      rows="1"
+                      oninput="handleInput(this)"
+                      onkeydown="handleKey(event)"></textarea>
+
+            <div class="pill-bottom-row">
+                <div class="left-controls">
+
+                    <!-- + MENU -->
+                    <div class="dropdown-container">
+                        <i class="fas fa-plus icon-btn"
+                           onclick="toggleMenu('plusMenu',event)"></i>
+                        <div id="plusMenu" class="dropdown-menu">
+                            <div class="dropdown-item"
+                                 onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-file-upload"></i> Upload Files
+                            </div>
+                            <div class="dropdown-item"
+                                 onclick="addPhotos()">
+                                <i class="fas fa-images"></i> Photos
+                            </div>
+                            <div class="dropdown-item"
+                                 onclick="openNotebookLM()">
+                                <i class="fas fa-book"></i> NotebookLM
+                            </div>
+                        </div>
+                        <input type="file"
+                               id="fileInput"
+                               style="display:none"
+                               onchange="handleFileUpload(this)">
+                    </div>
+
+                </div>
+
+                <!-- RIGHT‑SIDE CONTROLS -->
+                <div style="display:flex;gap:8px;align-items:center">
+                    <span class="char-counter" id="charCount">0 characters</span>
+
+                    <!-- MODEL SELECTOR (Fast / Thinking / Pro) -->
+                    <div class="model-selector">
+                        <div class="model-label"
+                             onclick="toggleModelDropdown(event)">
+                            <span id="currentModel">Fast</span>
+                            <i class="fas fa-chevron-down"
+                               style="font-size:12px"></i>
+                        </div>
+                        <div id="modelDropdown" class="model-dropdown">
+                            <div class="model-option active"
+                                 onclick="selectModel('fast',event)"
+                                 data-model="fast">
+                                <div>
+                                    <div class="model-option-title">Fast</div>
+                                    <div class="model-option-desc">Answers quickly</div>
+                                </div>
+                                <span class="checkmark show">✓</span>
+                            </div>
+                            <div class="model-option"
+                                 onclick="selectModel('thinking',event)"
+                                 data-model="thinking">
+                                <div>
+                                    <div class="model-option-title">Thinking</div>
+                                    <div class="model-option-desc">Solves complex problems</div>
+                                </div>
+                                <span class="checkmark">✓</span>
+                            </div>
+                            <div class="model-option"
+                                 onclick="selectModel('pro',event)"
+                                 data-model="pro">
+                                <div>
+                                    <div class="model-option-title">Pro</div>
+                                    <div class="model-option-desc">
+                                        Thinks longer for advanced math & code
+                                    </div>
+                                </div>
+                                <span class="checkmark">✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MICROPHONE (speech) -->
+                    <i class="fas fa-microphone icon-btn"
+                       id="micBtn"
+                       onclick="toggleSpeech()"></i>
+
+                    <!-- SEND BUTTON -->
+                    <i class="fas fa-paper-plane send-btn"
+                       id="sendBtn"
+                       onclick="sendChat()"></i>
+                </div>
+            </div>
+        </div>
+
+        <p class="disclaimer">
+            Multiverse can make mistakes, so double‑check it.
+        </p>
+    </div>
 </div>
 
+<!-- --------------------------------------------------- -->
+<!-- ----------  FULL JEMINI SCRIPT (unchanged)  --------- -->
+<!-- --------------------------------------------------- -->
 <script>
-/* ⚠️ PASTE YOUR NEW API KEY HERE. THE OLD ONE WAS EXPOSED. */
-const GROQ_API_KEY = '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'; 
-const MODEL = 'llama-3.3-70b-versatile';
+/* ----------------------------------------------------------- */
+/*  EVERYTHING THAT WAS INSIDE THE <script> TAG OF YOUR JEMINI   */
+/* ----------------------------------------------------------- */
 
-const md = window.markdownit({ html: false, linkify: true, typographer: true });
-const chatEl = document.getElementById('chat');
-const userInp = document.getElementById('userInput');
+const G_KEY = "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";
+let lastUserMessage = "";
+let recognition = null;
+let currentModel = "fast";          // fast / thinking / pro
+let currentTone  = "balanced";      // (tone is now unused – kept for compatibility)
 
-/* --- THE SYSTEM PROMPT (Forces the AI to format like the image) --- */
-const messages = [
-  { 
-    role: "system", 
-    content: `You are Multiverse AI. Format your responses naturally:
-    1. If providing lists or facts, use bullet points.
-    2. Do NOT bold the start of bullet points or sentences unless it is truly necessary for emphasis.
-    3. Use a clean, conversational tone without forced formatting.
-    4. When finished with the main info, insert a horizontal rule (---).
-    5. After the rule, ask a single, polite follow-up question.
-    6. Write good code.`
-  }
-];
+/* ----------------- PILL‑LABEL LOGIC (JEMINI) ----------------- */
+const pillContainer = document.getElementById('pillLabelsContainer');
+const activePills = {};   // track which pills are shown
 
-function addMessage(text, who) {
-  const wrapper = document.createElement('div');
-  wrapper.className = `message-wrapper ${who === 'user' ? 'user-wrapper' : ''}`;
+function addToolPill(label){
+    if (activePills[label]) return;        // avoid duplicates
+    activePills[label] = true;
 
-  if (who === 'bot') {
-    // Builds the bot response with the sparkle icon and action bar
-    wrapper.innerHTML = `
-      <div class="icon-col">
-        <i class="fas fa-sparkles sparkle-icon"></i>
-      </div>
-      <div class="content-col">
-        <div class="bot-content">${md.render(text)}</div>
-        <div class="action-bar">
-          <i class="far fa-thumbs-up"></i>
-          <i class="far fa-thumbs-down"></i>
-          <i class="fas fa-redo"></i>
-          <i class="far fa-copy" onclick="copyText(this)"></i>
-          <i class="fas fa-ellipsis-v"></i>
-        </div>
-      </div>
-    `;
-  } else {
-    // Builds the user pill
-    wrapper.innerHTML = `<div class="user-content">${text}</div>`;
-  }
-
-  chatEl.appendChild(wrapper);
-  chatEl.scrollTop = chatEl.scrollHeight;
+    const pill = document.createElement('div');
+    pill.className = 'pill-label';
+    pill.setAttribute('data-label', label);
+    pill.innerHTML = `${label}<span onclick="removeToolPill('${label}')">&times;</span>`;
+    pillContainer.appendChild(pill);
 }
-
-// Simple function to copy text
-function copyText(iconElement) {
-  const contentDiv = iconElement.closest('.content-col').querySelector('.bot-content');
-  navigator.clipboard.writeText(contentDiv.innerText).then(() => {
-    iconElement.classList.replace('far', 'fas');
-    setTimeout(() => iconElement.classList.replace('fas', 'far'), 2000);
-  });
-}
-
-async function sendMessage() {
-  const userText = userInp.value.trim();
-  if (!userText) return;
-
-  addMessage(userText, 'user');
-  userInp.value = '';
-  messages.push({ role: "user", content: userText });
-
-  // Add Thinking Animation
-  const typingWrapper = document.createElement('div');
-  typingWrapper.className = 'message-wrapper';
-  typingWrapper.innerHTML = `
-    <div class="icon-col"><i class="fas fa-sparkles sparkle-icon"></i></div>
-    <div class="content-col"><div class="typing"><span></span><span></span><span></span></div></div>
-  `;
-  chatEl.appendChild(typingWrapper);
-  chatEl.scrollTop = chatEl.scrollHeight;
-
-  try {
-    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ model: MODEL, messages, temperature: 0.7, max_tokens: 1000 })
+function removeToolPill(label){
+    delete activePills[label];
+    const pills = pillContainer.querySelectorAll('.pill-label');
+    pills.forEach(p => {
+        if (p.getAttribute('data-label') === label) p.remove();
     });
+}
 
-    const data = await resp.json();
-    chatEl.removeChild(typingWrapper);
-    
-    if (data.choices && data.choices.length > 0) {
-      const reply = data.choices[0].message.content;
-      addMessage(reply, 'bot');
-      messages.push({ role: "assistant", content: reply });
-    } else {
-      throw new Error("Invalid API response");
+/* ----------------- MARKDOWN‑IT (bot rendering) ----------------- */
+const md = window.markdownit({html:false,linkify:true,typographer:true})
+          .use(window.markdownitEmoji)
+          .use(window.markdownitFootnote)
+          .use(window.markdownitSub)
+          .use(window.markdownitSup)
+          .use(window.markdownitMark)
+          .use(window.markdownitContainer,'warning');
+
+/* ----------------- INPUT HANDLING ----------------- */
+function handleInput(el){
+    el.style.height = "auto";
+    el.style.height = (el.scrollHeight) + "px";
+    document.getElementById('sendBtn')
+            .classList.toggle('ready', el.value.trim().length > 0);
+    document.getElementById('charCount')
+            .innerText = `${el.value.length} characters`;
+}
+function handleKey(e){
+    if (e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        sendChat();
+    }
+}
+
+/* ----------------- MENU LOGIC (PLUS) ----------------- */
+function toggleMenu(menuId, event){
+    event.stopPropagation();
+    const menu = document.getElementById(menuId);
+    const isVisible = menu.style.display === 'block';
+    // close all other menus first
+    document.querySelectorAll('.dropdown-menu')
+            .forEach(m=>m.style.display='none');
+    document.getElementById('modelDropdown').style.display='none';
+    menu.style.display = isVisible ? 'none' : 'block';
+}
+
+/* ----------------- MODEL SELECTOR ----------------- */
+function toggleModelDropdown(event){
+    event.stopPropagation();
+    const dropdown = document.getElementById('modelDropdown');
+    const isVisible = dropdown.style.display === 'block';
+    // close other menus first
+    document.querySelectorAll('.dropdown-menu')
+            .forEach(m=>m.style.display='none');
+    dropdown.style.display = isVisible ? 'none' : 'block';
+}
+function selectModel(model, event){
+    event.stopPropagation();
+    currentModel = model;
+    document.getElementById('currentModel')
+            .innerText = model.charAt(0).toUpperCase() + model.slice(1);
+    // update UI check‑marks
+    document.querySelectorAll('.model-option')
+            .forEach(opt=>{
+                const active = opt.dataset.model === model;
+                opt.classList.toggle('active',active);
+                const chk = opt.querySelector('.checkmark');
+                if (chk) chk.classList.toggle('show',active);
+            });
+    document.getElementById('modelDropdown').style.display='none';
+}
+
+/* ----------------- SPEECH (stub) ----------------- */
+if ('webkitSpeechRecognition' in window){
+    recognition = new webkitSpeechRecognition();
+    recognition.onstart = () => document.getElementById('micBtn').style.color = "#ea4335";
+    recognition.onend   = () => document.getElementById('micBtn').style.color = "";
+    recognition.onresult = (e)=>{
+        document.getElementById('chatIn').value += e.results[0][0].transcript;
+        handleInput(document.getElementById('chatIn'));
+    };
+}
+function toggleSpeech(){ if (recognition) recognition.start(); }
+
+/* ----------------- LOADING INDICATOR ----------------- */
+function showLoading(id){
+    const div = document.createElement('div');
+    div.className = 'message bot bot-typing';
+    div.id = id;
+    div.innerHTML = `<i class="fas fa-robot fa-spin"></i> Bot is thinking...`;
+    document.getElementById('chat').appendChild(div);
+    scrollToBottom();
+}
+function hideLoading(id){
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+/* ----------------- MESSAGE APPEND ----------------- */
+function addMessage(text, who, raw = false){
+    const div = document.createElement('div');
+    div.className = `message ${who}`;
+    if (who === 'bot'){
+        div.innerHTML = raw ? text : md.render(text);
+    }else{
+        div.textContent = text;
+    }
+    document.getElementById('chat').appendChild(div);
+    scrollToBottom();
+}
+
+/* ----------------- SCROLL TO BOTTOM ----------------- */
+function scrollToBottom(){
+    const chat = document.getElementById('chat');
+    chat.scrollTop = chat.scrollHeight;
+}
+
+/* ----------------- MAP MODEL NAMES → GROQ IDs ----------------- */
+function getGroqModelName(model){
+    switch(model){
+        case "fast":      return "llama-3.3-70b-versatile";
+        case "thinking":  return "mixtral-8x7b-32768";
+        case "pro":       return "llama-3.1-405b-reasoning";
+        default:          return "llama-3.3-70b-versatile";
+    }
+}
+
+/* ----------------- MAIN SEND FUNCTION ----------------- */
+async function sendChat(isRegenerate = false){
+    const input = document.getElementById('chatIn');
+    const text = isRegenerate ? lastUserMessage : input.value.trim();
+    if (!text) return;
+
+    /* ---- SLIDE‑DOWN ANIMATION (kept from Jemini) ---- */
+    const wrapper = document.querySelector('.input-wrapper');
+    if (wrapper && !wrapper.classList.contains('slide-down')){
+        setTimeout(()=>wrapper.classList.add('slide-down'),400);
     }
 
-  } catch (e) {
-    if(typingWrapper.parentNode) chatEl.removeChild(typingWrapper);
-    addMessage("⚠️ Error: " + e.message, 'bot');
-  }
+    if (!isRegenerate){
+        lastUserMessage = text;
+        addMessage(text,'user');
+        input.value = '';
+        handleInput(input);
+    }
+
+    // If any tool pills are active, add them to the system prompt (optional)
+    const activeToolText = Object.keys(activePills).length
+        ? "\n\n[Active tools: " + Object.keys(activePills).join(", ") + "]"
+        : "";
+
+    const loadId = 'loading-' + Date.now();
+    showLoading(loadId);
+
+    const systemPrompt = `You are Multiverse, a helpful AI assistant. Tone: ${currentTone}.${activeToolText}`;
+
+    const payload = {
+        model: getGroqModelName(currentModel),
+        messages:[
+            {role:"system",content:systemPrompt},
+            {role:"user",content:text}
+        ],
+        temperature:0.7
+    };
+
+    try{
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+            method:'POST',
+            headers:{
+                Authorization:`Bearer ${G_KEY}`,
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify(payload)
+        });
+
+        hideLoading(loadId);
+
+        if (!resp.ok){
+            const err = await resp.text();
+            addMessage(`⚠️ API error ${resp.status}: ${err}`,'bot');
+            return;
+        }
+
+        const data = await resp.json();
+        const reply = data.choices[0].message.content.trim();
+        addMessage(reply,'bot');
+    }catch(e){
+        hideLoading(loadId);
+        addMessage(`⚠️ Connection error: ${e.message}`,'bot');
+    }
 }
 
-document.getElementById('sendBtn').addEventListener('click', sendMessage);
-userInp.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+/* ----------------- PLACEHOLDER FUNCTIONS (kept) ----------------- */
+function handleFileUpload(input){ /* stub – implement if needed */ }
+function addPhotos(){ /* stub */ }
+function openNotebookLM(){ /* stub */ }
+
+/* ----------------- CLOSE DROPDOWNS ON OUTSIDE CLICK ----------------- */
+window.onclick = function(e){
+    if (!e.target.closest('.dropdown-container')){
+        document.querySelectorAll('.dropdown-menu')
+                .forEach(m=>m.style.display='none');
+    }
+    if (!e.target.closest('.model-selector')){
+        document.getElementById('modelDropdown').style.display='none';
+    }
+};
+
+/* ----------------- FOCUS TEXTAREA ON LOAD ----------------- */
+document.addEventListener('DOMContentLoaded',()=> {
+    document.getElementById('chatIn').focus();
+});
 </script>
+
 </body>
 </html>
